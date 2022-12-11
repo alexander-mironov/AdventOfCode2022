@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 from typing import Union
 
@@ -47,7 +48,17 @@ class Monkey:
 
 def day11_part1(filename: str) -> int:
     monkeys = parse_monkeys(filename)
-    for round in range(20):
+    return process(monkeys, rounds=20, worry_level_divider=3)
+
+
+def day11_part2(filename: str) -> int:
+    monkeys = parse_monkeys(filename)
+    return process(monkeys, rounds=10_000, worry_level_divider=1)
+
+
+def process(monkeys: list[Monkey], rounds: int, worry_level_divider: int):
+    limit = math.prod([m.divisibility_check.divide_by for m in monkeys])
+    for _ in range(rounds):
         for monkey in monkeys:
             while len(monkey.items) > 0:
                 item = monkey.get_item_for_inspection()
@@ -61,11 +72,11 @@ def day11_part1(filename: str) -> int:
                     item *= operand
                 else:
                     item += operand
-                item = item // 3
+                item = item // worry_level_divider
+                item = item % limit
 
                 whom_to_give = monkey.divisibility_check.check(item)
                 monkeys[whom_to_give].items.append(item)
-
     sorted_monkeys = sorted(monkeys, key=lambda x: x.inspected_items, reverse=True)
     return sorted_monkeys[0].inspected_items * sorted_monkeys[1].inspected_items
 
@@ -101,3 +112,5 @@ def parse_monkeys(filename) -> list[Monkey]:
 if __name__ == '__main__':
     assert day11_part1('res/day11_sample.txt') == 10605
     print(day11_part1('res/day11.txt'))
+    assert day11_part2('res/day11_sample.txt') == 2713310158
+    print(day11_part2('res/day11.txt'))
