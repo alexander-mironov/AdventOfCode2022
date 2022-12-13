@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import cmp_to_key
 
 from utils import read_stripped_lines
 
@@ -51,6 +52,27 @@ def day13_part1(filename: str):
     return sum_ordered
 
 
+def day13_part2(filename: str):
+    lines = read_stripped_lines(filename)
+    divider1 = [[2]]
+    divider2 = [[6]]
+    packets = [divider1, divider2]
+    index = 0
+    while index < len(lines) / 3:
+        left = eval(lines[index * 3])
+        right = eval(lines[index * 3 + 1])
+        index += 1
+        packets.append(left)
+        packets.append(right)
+
+    sorted_packets = sorted(packets, key=cmp_to_key(lambda item1, item2: is_ordered(item1, item2).value))
+    divider1_position = sorted_packets.index(divider1) + 1
+    divider2_position = sorted_packets.index(divider2) + 1
+    return divider1_position * divider2_position
+
+
 if __name__ == '__main__':
     assert day13_part1('res/day13_sample.txt') == 13
     print(day13_part1('res/day13.txt'))
+    assert day13_part2('res/day13_sample.txt') == 140
+    print(day13_part2('res/day13.txt'))
