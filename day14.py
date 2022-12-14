@@ -24,8 +24,28 @@ def move(sand_pos: (int, int), cave: Dict[tuple[int, int], TileType]) -> (int, i
 
 
 def day14_part1(filename: str):
-    lines = read_stripped_lines(filename)
+    cave, lowest_rock = parse_cave(filename)
 
+    rest = 0
+    fell_to_void = False
+    while not fell_to_void:
+        sand_pos = (500, 0)
+        while True:
+            new_sand_pos = move(sand_pos, cave)
+            if new_sand_pos == sand_pos:
+                cave[new_sand_pos] = TileType.SAND
+                rest += 1
+                break
+            else:
+                sand_pos = new_sand_pos
+            if sand_pos[1] >= lowest_rock:
+                fell_to_void = True
+                break
+    return rest
+
+
+def parse_cave(filename):
+    lines = read_stripped_lines(filename)
     cave: Dict[tuple[int, int], TileType] = {}
     lowest_rock = -1
     for line in lines:
@@ -46,25 +66,47 @@ def day14_part1(filename: str):
                     cave[(j, start_y)] = TileType.ROCK
             lowest_rock = max(lowest_rock, start_y)
             lowest_rock = max(lowest_rock, end_y)
+    return cave, lowest_rock
+
+
+def day14_part2(filename: str):
+    cave, lowest_rock = parse_cave(filename)
 
     rest = 0
-    fell_to_void = False
-    while not fell_to_void:
-        sand_pos = [500, 0]
+    blocked = False
+    while not blocked:
+        sand_pos = (500, 0)
         while True:
-            new_sand_pos = move(sand_pos, cave)
+            new_sand_pos = move_with_floor(sand_pos, cave, lowest_rock)
             if new_sand_pos == sand_pos:
                 cave[new_sand_pos] = TileType.SAND
                 rest += 1
+                if new_sand_pos == (500, 0):
+                    blocked = True
                 break
             else:
                 sand_pos = new_sand_pos
-            if sand_pos[1] >= lowest_rock:
-                fell_to_void = True
-                break
     return rest
+
+
+def move_with_floor(sand_pos: (int, int), cave: Dict[tuple[int, int], TileType], lowest_rock: int) -> (int, int):
+    new_pos_y = sand_pos[1] + 1
+    to_bottom = cave.get((sand_pos[0], new_pos_y))
+    if new_pos_y == lowest_rock + 2:
+        return sand_pos
+    if to_bottom is None:
+        return sand_pos[0], new_pos_y
+    to_bottom_left = cave.get((sand_pos[0] - 1, new_pos_y))
+    if to_bottom_left is None:
+        return sand_pos[0] - 1, new_pos_y
+    to_bottom_right = cave.get((sand_pos[0] + 1, new_pos_y))
+    if to_bottom_right is None:
+        return sand_pos[0] + 1, new_pos_y
+    return sand_pos
 
 
 if __name__ == '__main__':
     assert day14_part1('res/day14_sample.txt') == 24
     print(day14_part1('res/day14.txt'))
+    assert day14_part2('res/day14_sample.txt') == 93
+    print(day14_part2('res/day14.txt'))
